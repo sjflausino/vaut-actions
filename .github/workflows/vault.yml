@@ -9,9 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: hashicorp/setup-terraform@v2
-      - uses: actions/cache@v3
-  
+
       - name: Install jq
         uses: dcarbone/install-jq-action@v2.0.0
   
@@ -29,27 +27,33 @@ jobs:
           echo "::add-mask::$AWS_SECRET_ACCESS_KEY" 
           echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
 
-      - name: Terraform Plan
-        id: plan
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Install Vkpr
+        shell: bash
         run: |
-          terraform init 
-          terraform plan -var "access_key=${{ env.AWS_ACCESS_KEY_ID }}" -var "secret_key=${{ env.AWS_SECRET_ACCESS_KEY }}" -no-color -out plan_cache.json
-          
-      - name: Terraform apply
-        run: terraform apply -input=false -no-color -auto-approve plan_cache.json   
-        
-      - name: Save Terraform state to cache
-        uses: actions/cache@v2
-        with:
-          path: .terraform
-          key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
-          restore-keys: |
-            ${{ runner.os }}-terraform-
+          curl -fsSL https://get.vkpr.net/ | CONTROL_SKIP="true" bash
+          rit update repo --name="vkpr-cli" --version=1.3.5
 
-      - name: Kubeconf artefact
-        uses: actions/upload-artifact@v2
-        with:
-          name: kubeconf
-          path: |
-            kube/*
-          retention-days: 1
+      ### Configure VKPR Credentials
+      - name: config vkpr credentials
+        shell: bash
+        run: |
+            alias vkpr="rit vkpr"
+            rit set credential --provider="aws" \
+                --fields="accesskeyid,region,secretaccesskey" \
+                --values="${{ env.AWS_ACCESS_KEY_ID }},us-east-1,${{ env.AWS_SECRET_ACCESS_KEY }}" 
+
+      - name: Vkpr apply
+        run: |
+          shopt -s expand_aliases
+          alias vkpr="rit vkpr"
+          aws eks update-kubeconfig --name ${{ secrets.CLUSTER_NAME}} --region us-east-1
+          vkpr cert-manager install aws --aws_hostedzone_id=${{ secrets.AWS_HOSTEDZONE_ID }}
+          vkpr apply --path_to_file="$(pwd)/vkpr.yaml"
+          kubectl delete pod/"$(kubectl get pod -A | grep external-dns | awk -F' ' '{print $2}')" -n vkpr
