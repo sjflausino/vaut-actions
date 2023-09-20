@@ -19,11 +19,11 @@ jobs:
             -H "X-Vault-Token: ${{ secrets.VAULT_TOKEN }}" \
             --location "${{ secrets.VAULT_ADDR }}/v1/aws/creds/pipeline" > tmp.json
 
-          AWS_ACCESS_KEY_ID=$(jq -e '.data.access_key' ./tmp.json)
+          AWS_ACCESS_KEY_ID="$(jq -e '.data.access_key' ./tmp.json)"
           echo "::add-mask::$AWS_ACCESS_KEY_ID" 
           echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
 
-          AWS_SECRET_ACCESS_KEY=$(jq -e '.data.secret_key' ./tmp.json)
+          AWS_SECRET_ACCESS_KEY="$(jq -e '.data.secret_key' ./tmp.json)"
           echo "::add-mask::$AWS_SECRET_ACCESS_KEY" 
           echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
 
