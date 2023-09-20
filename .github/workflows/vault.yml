@@ -26,13 +26,6 @@ jobs:
           AWS_SECRET_ACCESS_KEY="$(jq -e '.data.secret_key' ./tmp.json)"
           echo "::add-mask::$AWS_SECRET_ACCESS_KEY" 
           echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ env.aws_access_key_id }}
-          aws-secret-access-key: ${{ env.aws_secret_access_key }}
-          aws-region: us-east-1
       
       - name: Install Vkpr
         shell: bash
@@ -47,11 +40,14 @@ jobs:
           alias vkpr="rit vkpr"
           rit set credential --provider="aws" \
               --fields="accesskeyid,region,secretaccesskey" \
-              --values="${{ env.AWS_ACCESS_KEY_ID }},us-east-1,${{ env.AWS_SECRET_ACCESS_KEY }}" 
+              --values="${{ env.aws_access_key_id }},us-east-1,${{ env.aws_secret_access_key }}" 
 
       - name: Vkpr apply
         run: |
           shopt -s expand_aliases
           alias vkpr="rit vkpr"
+          export AWS_SECRET_ACCESS_KEY=${{ env.aws_secret_access_key }}
+          export AWS_ACCESS_KEY_ID=${{ env.aws_access_key_id }}
+          export AWS_REGION=us-east-1
           aws eks update-kubeconfig --name ${{ secrets.CLUSTER_NAME}} --region us-east-1
           vkpr apply --path_to_file="$(pwd)/vkpr.yaml"
