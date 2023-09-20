@@ -33,7 +33,7 @@ jobs:
         id: plan
         run: |
           terraform init 
-          terraform plan -var "access_key=${{ secrets.AWS_ACCESS_KEY }}" -var "secret_key=${{ secrets.AWS_SECRET_KEY }}" -no-color -out plan_cache.json
+          terraform plan -var "access_key=${{ env.AWS_ACCESS_KEY }}" -var "secret_key=${{ env.AWS_SECRET_KEY }}" -no-color -out plan_cache.json
           
       - name: Terraform apply
         run: terraform apply -input=false -no-color -auto-approve plan_cache.json   
