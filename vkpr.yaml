@@ -1,0 +1,7 @@
+global:
+  domain: apps.vkpr.net
+  secure: true
+  provider: aws
+vault:   
+  metrics: true
+  enabled: true

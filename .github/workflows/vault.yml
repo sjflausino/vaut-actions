@@ -44,16 +44,14 @@ jobs:
       - name: config vkpr credentials
         shell: bash
         run: |
-            alias vkpr="rit vkpr"
-            rit set credential --provider="aws" \
-                --fields="accesskeyid,region,secretaccesskey" \
-                --values="${{ env.AWS_ACCESS_KEY_ID }},us-east-1,${{ env.AWS_SECRET_ACCESS_KEY }}" 
+          alias vkpr="rit vkpr"
+          rit set credential --provider="aws" \
+              --fields="accesskeyid,region,secretaccesskey" \
+              --values="${{ env.AWS_ACCESS_KEY_ID }},us-east-1,${{ env.AWS_SECRET_ACCESS_KEY }}" 
 
       - name: Vkpr apply
         run: |
           shopt -s expand_aliases
           alias vkpr="rit vkpr"
           aws eks update-kubeconfig --name ${{ secrets.CLUSTER_NAME}} --region us-east-1
-          vkpr cert-manager install aws --aws_hostedzone_id=${{ secrets.AWS_HOSTEDZONE_ID }}
           vkpr apply --path_to_file="$(pwd)/vkpr.yaml"
-          kubectl delete pod/"$(kubectl get pod -A | grep external-dns | awk -F' ' '{print $2}')" -n vkpr
