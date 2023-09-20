@@ -1,0 +1,55 @@
+
+name: CI-vault-wokflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: hashicorp/setup-terraform@v2
+      - uses: actions/cache@v3
+  
+      - name: Install dependencies
+        run: apt-get install jq -y 
+
+      - name: Generate IAM from Vault
+        run: |
+          curl \
+            -H "X-Vault-Token: ${{ secrets.VAULT_TOKEN }}" \
+            --location "${{ secrets.VAULT_ADDR }}/v1/aws/creds/pipeline" > tmp.json
+
+          AWS_ACCESS_KEY="$(jq -e '.data.access_key' ./tmp.json)"
+          echo "::add-mask::$AWS_ACCESS_KEY" 
+          echo "aws_access_key=$AWS_ACCESS_KEY" >> $GITHUB_ENV
+
+          AWS_SECRET_KEY="$(jq -e '.data.access_key' ./tmp.json)"
+          echo "::add-mask::$AWS_SECRET_KEY" 
+          echo "aws_secret_key=$AWS_SECRET_KEY" >> $GITHUB_ENV
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform init 
+          terraform plan -var "access_key=${{ secrets.AWS_ACCESS_KEY }}" -var "secret_key=${{ secrets.AWS_SECRET_KEY }}" -no-color -out plan_cache.json
+          
+      - name: Terraform apply
+        run: terraform apply -input=false -no-color -auto-approve plan_cache.json   
+        
+      - name: Save Terraform state to cache
+        uses: actions/cache@v2
+        with:
+          path: .terraform
+          key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
+          restore-keys: |
+            ${{ runner.os }}-terraform-
+
+      - name: Kubeconf artefact
+        uses: actions/upload-artifact@v2
+        with:
+          name: kubeconf
+          path: |
+            kube/*
+          retention-days: 1
