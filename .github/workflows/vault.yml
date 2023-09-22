@@ -24,8 +24,12 @@ jobs:
           echo "aws_access_key_id=$AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
 
           AWS_SECRET_ACCESS_KEY=$(jq -er '.data.secret_key' ./tmp.json)
-          echo "::add-mask::$AWS_SECRET_ACCESS_KEY" 
           echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
+      
+      - name: Generate IAM from Vault
+        run: |
+            echo "ACCES KEY = ${{ env.aws_access_key_id" }}"
+            echo "SECRET = ${{ env.aws_secret_access_key" }}"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
