@@ -37,6 +37,10 @@ jobs:
       #     echo "::add-mask::$AWS_SECRET_ACCESS_KEY" 
       #     echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
 
+      - name: echo envs
+        run: |
+            echo "${{ env.AWS_SECRET_ACCESS_KEY }}"
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
