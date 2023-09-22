@@ -12,30 +12,36 @@ jobs:
 
       - name: Install jq
         uses: dcarbone/install-jq-action@v2.0.0
-  
-      - name: Generate IAM from Vault
-        run: |
-          curl \
-            -H "X-Vault-Token: ${{ secrets.VAULT_TOKEN }}" \
-            --location "${{ secrets.VAULT_ADDR }}/v1/aws/creds/pipeline" > tmp.json
 
-          AWS_ACCESS_KEY_ID=$(jq -er '.data.access_key' ./tmp.json)
-          echo "::add-mask::$AWS_ACCESS_KEY_ID" 
-          echo "aws_access_key_id=$AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
+      - name: Import Secrets
+        id: import-secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          token: ${{ secrets.VAULT_TOKEN }}
+          secrets: |
+              aws/creds/pipeline access_key | AWS_ACCESS_KEY_ID ;
+              aws/creds/pipeline secret_key | AWS_SECRET_ACCESS_KEY ;  
 
-          AWS_SECRET_ACCESS_KEY=$(jq -er '.data.secret_key' ./tmp.json)
-          echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
-      
-      - name: Generate IAM from Vault
-        run: |
-            echo "ACCES KEY = ${{ env.aws_access_key_id }}"
-            echo "SECRET = ${{ env.aws_secret_access_key }}"
+      # - name: Generate IAM from Vault
+      #   run: |
+      #     curl \
+      #       -H "X-Vault-Token: ${{ secrets.VAULT_TOKEN }}" \
+      #       --location "${{ secrets.VAULT_ADDR }}/v1/aws/creds/pipeline" > tmp.json
+
+      #     AWS_ACCESS_KEY_ID=$(jq -er '.data.access_key' ./tmp.json)
+      #     echo "::add-mask::$AWS_ACCESS_KEY_ID" 
+      #     echo "aws_access_key_id=$AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
+
+      #     AWS_SECRET_ACCESS_KEY=$(jq -er '.data.secret_key' ./tmp.json)
+      #     echo "::add-mask::$AWS_SECRET_ACCESS_KEY" 
+      #     echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ env.aws_access_key_id }}
-          aws-secret-access-key: ${{ env.aws_secret_access_key }}
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
       - name: Install Vkpr
