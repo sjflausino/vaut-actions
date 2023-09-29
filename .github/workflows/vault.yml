@@ -39,7 +39,10 @@ jobs:
 
       - name: echo envs
         run: |
-            echo "${{ env.AWS_SECRET_ACCESS_KEY }}"
+            sleep 5
+            echo "AWS_ACCESS_KEY_ID =${{ env.AWS_ACCESS_KEY_ID }}"
+            echo "AWS_SECRET_ACCESS_KEY =${{ env.AWS_SECRET_ACCESS_KEY }}"
+
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
