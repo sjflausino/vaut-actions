@@ -36,8 +36,11 @@ jobs:
             --role-arn "${{ secrets.VAULT_ROLE_ARN }}" \
             --role-session-name admin-pipeline-2
 
-      - name: get caller identity
+      - name: Update Kubeconfig
         run: |
           aws eks update-kubeconfig --name ${{ secrets.CLUSTER_NAME }} --region us-east-1 --role-arn "${{ secrets.VAULT_ROLE_ARN }}"
-          sleep 2
-          kubect get all 
+
+      - name: Kubectl get All
+        uses: actions-hub/kubectl@master
+        with:
+          args: get all -A
