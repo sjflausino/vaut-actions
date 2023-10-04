@@ -34,7 +34,7 @@ jobs:
           aws sts get-caller-identity
           aws sts assume-role \
             --role-arn "${{ secrets.VAULT_ROLE_ARN }}" \
-            --role-session-name admin-pipeline-2
+            --role-session-name admin-pipeline-2 > /dev/null
 
       - name: Update Kubeconfig
         run: |
