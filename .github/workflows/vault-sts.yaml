@@ -36,11 +36,13 @@ jobs:
             --role-arn "${{ secrets.VAULT_ROLE_ARN }}" \
             --role-session-name admin-pipeline-2 > /dev/null
 
+      - name: Install Vkpr
+        shell: bash
+        run: |
+          curl -fsSL https://get.vkpr.net/ | CONTROL_SKIP="true" bash
+          rit update repo --name="vkpr-cli" --version=1.3.5
+
       - name: Update Kubeconfig
         run: |
           aws eks update-kubeconfig --name ${{ secrets.CLUSTER_NAME }} --region us-east-1 --role-arn "${{ secrets.VAULT_ROLE_ARN }}"
-
-      - name: Kubectl get All
-        uses: actions-hub/kubectl@master
-        with:
-          args: get all -A
+          kubectl get all -A
