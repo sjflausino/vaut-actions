@@ -19,10 +19,8 @@ jobs:
           secrets: |
               aws/creds/pipeline access_key | AWS_ACCESS_KEY_ID ;
               aws/creds/pipeline secret_key | AWS_SECRET_ACCESS_KEY ;  
-      
-      - name: sleep 10
-        run: |
-          sleep 10
+              
+      - run: sleep 10
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -30,7 +28,11 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+          role-to-assume: arn:aws:iam::001407676048:role/admin-pipeline-2
+          role-duration-seconds: 3600
+          role-session-name: admin-pipeline-2
 
-      - name: get caller identity2
+      - name: get caller identity
         run: |
           aws sts get-caller-identity
+
