@@ -28,7 +28,7 @@ jobs:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-          role-to-assume: arn:aws:iam::001407676048:role/admin-pipeline-2
+          role-to-assume: ${{ secrets.VAULT_ROLE_ARN }}
           role-duration-seconds: 3600
           role-session-name: admin-pipeline-2
 
@@ -36,3 +36,8 @@ jobs:
         run: |
           aws sts get-caller-identity
 
+      - name: get caller identity
+        run: |
+          aws eks update-kubeconfig --name ${{ secrets.CLUSTER_NAME }} --region us-east-1 --role-arn "${{ secrets.VAULT_ROLE_ARN }}"
+          sleep 2
+          kubect get all 
